@@ -1,0 +1,13 @@
+{
+  "resource_type": "aws_s3_bucket",
+  "resource_name": "my_bucket",
+  "properties": {
+    "bucket": "my-unique-bucket-name-12345",
+    "acl": "private",
+    "versioning_enabled": true,
+    "tags": {
+      "Environment": "dev",
+      "ManagedBy": "terraform"
+    }
+  }
+}

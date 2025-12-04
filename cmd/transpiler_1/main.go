@@ -2,46 +2,36 @@ package main
 
 import (
 	"fmt"
-	"reflect"
+	"os"
+
+	"github.com/patryk100/transpiler_1/internal/parser"
 )
 
-type BaseResource struct {
-	Name        string `tf:"resource_name"`
-	Description string `tf:"resource_description"`
-	Region      string `tf:"default_region"`
-}
-type S3Bucket struct {
-	BaseResource
-	BucketName string `tf:"bucket,required"`
-	ACL        string `tf:"acl"`
-	Versioning bool   `tf:"versioning_enabled"`
-}
-
-type EC2Instance struct {
-	BaseResource
-	AMI          string `tf:"ami,required"`
-	InstanceType string `tf:"instance_type,required"`
-	Versioning   bool   `tf:"versioning_enabled"`
-}
-
-func NewBaseResource(name string, desc string, region string) *BaseResource {
-	return &BaseResource{Name: name, Description: desc, Region: region}
-}
-
 func main() {
-	base := NewBaseResource("name", "desc", "us-east-1")
-	v := reflect.ValueOf(base)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	if v.Kind() != reflect.Struct {
-		panic("Not a struct")
-	}
-	t := v.Type()
-	for i := 0; i < v.NumField(); i++ {
-		fmt.Println(t.Field(i).Name,
-			t.Field(i).Tag.Get("tf"),
-			v.Field(i).Interface())
+	// Check if a file path was provided
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: transpiler_1 <json-file>")
+		fmt.Println("Example: transpiler_1 examples/s3_bucket.json")
+		os.Exit(1)
 	}
 
+	filePath := os.Args[1]
+
+	// Create a new parser
+	p := parser.NewParser()
+
+	// Parse the JSON file
+	resource, err := p.ParseFile(filePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error parsing file: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Generate Terraform HCL
+	hcl := resource.ToHCL()
+
+	// Output the generated Terraform code
+	fmt.Println("# Generated Terraform Configuration")
+	fmt.Println()
+	fmt.Print(hcl)
 }
